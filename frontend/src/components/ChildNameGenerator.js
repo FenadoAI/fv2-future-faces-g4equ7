@@ -51,7 +51,7 @@ const ChildNameGenerator = () => {
       }
     } catch (error) {
       console.error('Error generating names:', error);
-      toast.error('Failed to generate names. Please try again.');
+      toast.error('fv2-future-faces-g4equ7');
     } finally {
       setIsLoading(false);
     }
