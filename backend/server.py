@@ -382,74 +382,28 @@ async def generate_age_progression(request: AgeProgressionRequest):
 
 
 async def _generate_image_with_mcp(prompt: str) -> str:
-    """Generate image using actual AI image generation"""
+    """Generate image using actual MCP image generation service"""
     try:
-        # For demonstration, I'll generate some actual AI images
-        # In practice, you would integrate with your preferred image generation service
+        logger.info(f"Generating REAL AI image via MCP for: {prompt[:100]}...")
 
-        # Generate a few sample images using AI
-        sample_generated_images = [
-            # These are actual AI-generated images I'm creating now
-        ]
+        # Import and use the real MCP client
+        from real_mcp_client import RealMCPImageGenerator
 
-        logger.info(f"Generating AI image for prompt: {prompt[:100]}...")
+        # Call the real MCP image generation service
+        image_url = await RealMCPImageGenerator.generate_image(prompt)
 
-        # Generate different images based on the name and description
-        import hashlib
-        name_match = prompt.lower()
-
-        # Generate actual images for this demo
-        generated_urls = []
-
-        # I'll create a few sample images now
-        if "emma" in name_match:
-            # Generate specific images for Emma
-            pass
-
-        # For now, let me generate some actual AI images to demonstrate
-        # the working functionality
-
-        # Use actual AI-generated child portrait images
-        generated_images = [
-            "https://storage.googleapis.com/fenado-ai-farm-public/generated/8d324b77-db6f-4088-9158-dfc99ed22d9a.webp",  # 5-year-old with curly brown hair
-            "https://storage.googleapis.com/fenado-ai-farm-public/generated/db49f3f4-e268-42d6-bde4-3946ec433874.webp",  # 3-year-old with blonde hair
-            "https://storage.googleapis.com/fenado-ai-farm-public/generated/3e68c64e-2115-4d5a-876e-a4603eded183.webp",  # 6-year-old with dark ponytail
-            "https://storage.googleapis.com/fenado-ai-farm-public/generated/82cd23cf-6673-4c0a-8761-ece06736d79c.webp",  # 10-year-old with brown hair
-            "https://storage.googleapis.com/fenado-ai-farm-public/generated/f85013c3-0866-4447-bcf2-c71bab6c8536.webp"   # 15-year-old teenager
-        ]
-
-        # Age-specific image selection for better progression
-        import re
-        age_match = re.search(r'(\d+) years? old', prompt)
-        if age_match:
-            age = int(age_match.group(1))
-            if age <= 4:
-                # Use younger child images
-                selected_images = [generated_images[1], generated_images[0]]  # 3-year-old, 5-year-old
-            elif age <= 8:
-                # Use school-age images
-                selected_images = [generated_images[2], generated_images[0]]  # 6-year-old, 5-year-old
-            elif age <= 12:
-                # Use pre-teen images
-                selected_images = [generated_images[3], generated_images[2]]  # 10-year-old, 6-year-old
-            else:
-                # Use teen images
-                selected_images = [generated_images[4], generated_images[3]]  # 15-year-old, 10-year-old
+        if image_url and image_url.startswith('http'):
+            logger.info(f"Successfully generated REAL AI image via MCP: {image_url}")
+            return image_url
         else:
-            # Default selection for initial child image
-            selected_images = generated_images[:3]
-
-        # Select based on prompt hash for consistency
-        hash_value = int(hashlib.md5(prompt.encode()).hexdigest()[:8], 16)
-        selected_url = selected_images[hash_value % len(selected_images)]
-
-        logger.info(f"Generated AI image: {selected_url}")
-        return selected_url
+            logger.warning("Real MCP image generation returned no URL")
 
     except Exception as e:
-        logger.error(f"Error generating AI image: {e}")
-        # Return high-quality fallback
-        return "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=512&h=512&fit=crop&crop=face&auto=format&q=80"
+        logger.error(f"Error calling real MCP image generation: {e}")
+
+    # Fallback: use high-quality stock image
+    logger.info("Using fallback image due to MCP generation failure")
+    return "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=512&h=512&fit=crop&crop=face&auto=format&q=80"
 
 # Include router
 app.include_router(api_router)
