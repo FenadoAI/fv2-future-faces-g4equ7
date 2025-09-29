@@ -139,8 +139,61 @@ class SearchAgent(BaseAgent):
 
 class ChatAgent(BaseAgent):
     # General chat and assistance agent
-    
+
     def __init__(self, config: AgentConfig):
         system_prompt = "Friendly conversational AI. Natural conversations, explanations, analysis. Helpful, harmless, honest."
-        
+
         super().__init__(config, system_prompt)
+
+
+class ImageAgent(BaseAgent):
+    # Image generation agent with MCP support
+
+    def __init__(self, config: AgentConfig):
+        system_prompt = "You are an AI assistant specialized in image generation. You can generate high-quality images based on text descriptions using available tools."
+
+        super().__init__(config, system_prompt)
+
+        # Image MCP setup
+        self.setup_image_mcp()
+
+    def setup_image_mcp(self):
+        # Setup image generation MCP with auth token
+        mcp_token = os.getenv("CODEXHUB_MCP_AUTH_TOKEN")
+        if mcp_token and mcp_token != "dummy-key":
+            server_configs = [{
+                "type": "http",
+                "url": "https://mcp.codexhub.ai/image/mcp",
+                "headers": {"x-team-key": mcp_token}
+            }]
+            self.setup_mcp(server_configs)
+            logger.info("Image generation MCP configured")
+        else:
+            logger.warning("CODEXHUB_MCP_AUTH_TOKEN not found, image generation disabled")
+
+    async def generate_image(self, prompt: str) -> AgentResponse:
+        # Generate image using MCP tools
+        if not self.mcp_client:
+            return AgentResponse(
+                success=False,
+                content="",
+                error="MCP image generation not available"
+            )
+
+        try:
+            # Use the MCP image generation tool
+            generation_prompt = f"Generate an image with this description: {prompt}"
+            result = await self.execute(generation_prompt, use_tools=True)
+            return result
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
+            return AgentResponse(
+                success=False,
+                content="",
+                error=str(e)
+            )
+
+    def get_capabilities(self) -> List[str]:
+        capabilities = super().get_capabilities()
+        capabilities.append("image_generation")
+        return capabilities
